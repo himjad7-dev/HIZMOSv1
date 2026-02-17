@@ -1,48 +1,22 @@
-name: Build Hizmos Firmware
-on: [push]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Install Arduino CLI
-        uses: arduino/setup-arduino-cli@v2
-
-      - name: Install ESP32 Platform
-        run: |
-          arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-          arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-
       - name: Install All Hizmos Libraries
         run: |
-          # Display
+          # 1. Display & Graphics (Handles SH1106)
           arduino-cli lib install "U8g2"
           
-          # Wireless & Radio (SmartRC for CC1101)
+          # 2. Wireless (CC1101 & nRF24)
           arduino-cli lib install "SmartRC-CC1101-Driver-Lib"
           arduino-cli lib install "RF24"
           
-          # Input, LEDs, and IR
-          arduino-cli lib install "IRremote"
-          arduino-cli lib install "Adafruit NeoPixel"
-          
-          # Bluetooth & HID
+          # 3. Bluetooth (BLE Mouse & Keyboard)
+          # Note: BLEDevice, BLEUtils, etc., are built-in to the ESP32 Core
           arduino-cli lib install "ESP32 BLE Mouse"
           arduino-cli lib install "ESP32 BLE Keyboard"
           
-          # SD Card (Required for many Flipper-style features)
+          # 4. Infrared & Pixels
+          arduino-cli lib install "IRremote"
+          arduino-cli lib install "Adafruit NeoPixel"
+          
+          # 5. System & Storage
           arduino-cli lib install "SD"
-
-      - name: Compile Hizmos
-        run: |
-          # FQBN includes CDCOnBoot=cdc to ensure USB works on S3
-          arduino-cli compile --fqbn esp32:esp32:esp32s3:CDCOnBoot=cdc HIZMOS_OLED_U8G2lib/HIZMOS_OLED_U8G2lib.ino --output-dir ./build
-
-      - name: Upload .bin Firmware
-        uses: actions/upload-artifact@v3
-        with:
-          name: Hizmos-Firmware-S3
-          path: ./build/*.bin
+          # 'WiFi', 'SPI', 'Wire', 'Update', 'USB', 'USBHIDKeyboard' 
+          # are all part of the ESP32 core and don't need separate install.
